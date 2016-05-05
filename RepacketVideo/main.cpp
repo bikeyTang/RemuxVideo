@@ -8,8 +8,8 @@ using std::endl;
 
 int main(int argc, char *argv[])
 {
-	string infile = "D:/video/22.264";
-	string outfile = "D:/video/22.mp4";
+	string infile = "C:/RecordDownload/3dav.flv";
+	string outfile = "C:/RecordDownload/3davflv.mp4";
 	Remux *rm = new Remux(infile, outfile);
 	if (rm->executeRemux())
 	{

@@ -74,7 +74,6 @@ bool Remux::writeHeader()
 	int ret;
 	ofmt = ofmt_ctx->oformat;
 	for (int i = 0; i < ifmt_ctx->nb_streams; i++) {
-		//根据输入流创建输出流（Create output AVStream according to input AVStream）
 		AVStream *in_stream = ifmt_ctx->streams[i];
 		if (in_stream->codec->codec_type == AVMEDIA_TYPE_VIDEO)
 		{
@@ -111,14 +110,14 @@ bool Remux::writeHeader()
 			}
 			encCtx->width = in_stream->codec->width;
 			encCtx->height = in_stream->codec->height;
-			
+			/*
 			AVDictionary *param=0;
 			if (encCtx->codec_id == AV_CODEC_ID_H264) {
 				av_opt_set(&param, "preset", "slow", 0);
 				av_dict_set(&param, "profile", "main", 0);
-			}
+			}*/
 			//没有这句，导致得到的视频没有缩略图等信息
-			ret = avcodec_open2(encCtx, pcodec, &param);
+			ret = avcodec_open2(encCtx, pcodec, NULL);
 		}
 		
 	}
