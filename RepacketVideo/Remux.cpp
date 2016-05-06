@@ -49,6 +49,7 @@ bool Remux::executeRemux()
 			av_bitstream_filter_filter(h264bsfc, ifmt_ctx->streams[videoIndex]->codec, NULL, &readPkt.data, &readPkt.size, readPkt.data, readPkt.size, 0);
 #endif
 			av_packet_rescale_ts(&readPkt, ifmt_ctx->streams[readPkt.stream_index]->time_base, ofmt_ctx->streams[readPkt.stream_index]->time_base);
+
 			if (readPkt.pts < readPkt.dts)
 			{
 				readPkt.pts = readPkt.dts + 1;
@@ -118,10 +119,10 @@ bool Remux::writeHeader()
 					
 			
 			AVDictionary *param=0;
-			//if (encCtx->codec_id == AV_CODEC_ID_H264) {
-			//	av_opt_set(&param, "preset", "slow", 0);
-			//	//av_dict_set(&param, "profile", "main", 0);
-			//}
+			if (encCtx->codec_id == AV_CODEC_ID_H264) {
+				av_opt_set(&param, "preset", "slow", 0);
+				//av_dict_set(&param, "profile", "main", 0);
+			}
 			//没有这句，导致得到的视频没有缩略图等信息
 			ret = avcodec_open2(encCtx, pCodec, &param);
 		}
