@@ -30,9 +30,12 @@ bool Remux::executeRemux()
 	if (!writeHeader())
 		return false;
 	int frame_index = 0;
+#ifdef H264_R
+	AVBitStreamFilterContext* h264bsfc = av_bitstream_filter_init("h264_mp4toannexb");
+#endif
 	while (1)
 	{
-		++frame_index;
+		
 		ret = av_read_frame(ifmt_ctx, &readPkt);
 		if (ret < 0)
 		{
@@ -40,13 +43,18 @@ bool Remux::executeRemux()
 		}
 		if (readPkt.stream_index == videoIndex)
 		{
-			//readPkt.flags |= AV_PKT_FLAG_KEY;
+			++frame_index;
+#ifdef H264_R
+			//过滤得到h264数据包
+			av_bitstream_filter_filter(h264bsfc, ifmt_ctx->streams[videoIndex]->codec, NULL, &readPkt.data, &readPkt.size, readPkt.data, readPkt.size, 0);
+#endif
 			av_packet_rescale_ts(&readPkt, ifmt_ctx->streams[readPkt.stream_index]->time_base, ofmt_ctx->streams[readPkt.stream_index]->time_base);
 			if (readPkt.pts < readPkt.dts)
 			{
 				readPkt.pts = readPkt.dts + 1;
 			}
-			ret = av_interleaved_write_frame(ofmt_ctx, &readPkt);
+			//这里如果使用av_interleaved_write_frame 会导致有时候写的视频文件没有数据。
+			ret = av_write_frame(ofmt_ctx, &readPkt);
 			if (ret < 0) {
 				//break;
 				std::cout << "write failed" << std::endl;
@@ -78,8 +86,8 @@ bool Remux::writeHeader()
 		if (in_stream->codec->codec_type == AVMEDIA_TYPE_VIDEO)
 		{
 			videoIndex = i;
-			AVCodec *pcodec = avcodec_find_encoder(in_stream->codec->codec_id);
-			out_stream = avformat_new_stream(ofmt_ctx, pcodec);
+			AVCodec *pCodec = avcodec_find_encoder(in_stream->codec->codec_id);
+			out_stream = avformat_new_stream(ofmt_ctx, pCodec);
 			if (!out_stream) {
 				printf("Failed allocating output stream\n");
 				ret = AVERROR_UNKNOWN;
@@ -89,11 +97,10 @@ bool Remux::writeHeader()
 			encCtx->codec_id = in_stream->codec->codec_id;
 			encCtx->codec_type = AVMEDIA_TYPE_VIDEO;
 			encCtx->pix_fmt = in_stream->codec->pix_fmt;
+			encCtx->width = in_stream->codec->width;
+			encCtx->height = in_stream->codec->height;
 			encCtx->flags = in_stream->codec->flags;
-			//encCtx->gop_size = 250;
 			encCtx->flags |= CODEC_FLAG_GLOBAL_HEADER;
-			//av_opt_set(encCtx->priv_data, "profile", "main", 0);
-			//av_opt_set(encCtx->priv_data, "preset", "slow", 0);
 			av_opt_set(encCtx->priv_data, "tune", "zerolatency", 0);
 			if (in_stream->codec->time_base.den > 25)
 			{
@@ -108,16 +115,15 @@ bool Remux::writeHeader()
 				//encCtx->pkt_timebase = in_stream->codec->pkt_timebase;
 				encCtx->time_base = { tmp.den, tmp.num };
 			}
-			encCtx->width = in_stream->codec->width;
-			encCtx->height = in_stream->codec->height;
-			/*
+					
+			
 			AVDictionary *param=0;
-			if (encCtx->codec_id == AV_CODEC_ID_H264) {
-				av_opt_set(&param, "preset", "slow", 0);
-				av_dict_set(&param, "profile", "main", 0);
-			}*/
+			//if (encCtx->codec_id == AV_CODEC_ID_H264) {
+			//	av_opt_set(&param, "preset", "slow", 0);
+			//	//av_dict_set(&param, "profile", "main", 0);
+			//}
 			//没有这句，导致得到的视频没有缩略图等信息
-			ret = avcodec_open2(encCtx, pcodec, NULL);
+			ret = avcodec_open2(encCtx, pCodec, &param);
 		}
 		
 	}

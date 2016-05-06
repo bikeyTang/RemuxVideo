@@ -8,7 +8,7 @@ extern "C"
 }
 
 using std::string;
-
+#define H264_R
 class Remux
 {
 public:
