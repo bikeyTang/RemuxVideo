@@ -8,7 +8,6 @@ extern "C"
 }
 
 using std::string;
-#define H264_R
 class Remux
 {
 public:
@@ -19,10 +18,13 @@ public:
 
 private:
 	int videoIndex;
+	bool isMp4;
 	AVFormatContext *ifmt_ctx = NULL, *ofmt_ctx = NULL;
 	AVPacket pkt;
 	string in_filename, out_filename;
 	AVCodecContext *encCtx=NULL;
 	bool writeHeader();
+	void initPts(int64_t*, int64_t);
+	void initDts(int64_t*, int64_t);
 };
 
