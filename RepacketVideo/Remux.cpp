@@ -8,7 +8,7 @@ Remux::Remux(string infile, string outfile) :in_filename(infile), out_filename(o
 	string in_suffix = infile.substr(pos);
 	//把后缀名转成小写字符
 	transform(in_suffix.begin(), in_suffix.end(), in_suffix.begin(), ::tolower);
-	if (in_suffix == ".mp4"||in_suffix==".mkv"){
+	if (in_suffix == ".mp4"||in_suffix==".mkv"||in_suffix==".mov"){
 		isMp4 = true;
 	}
 
@@ -17,6 +17,9 @@ Remux::Remux(string infile, string outfile) :in_filename(infile), out_filename(o
 
 Remux::~Remux()
 {
+	
+	avio_close(ofmt_ctx->pb);
+	avformat_free_context(ofmt_ctx);
 
 }
 
@@ -38,9 +41,7 @@ bool Remux::executeRemux()
 	if (!writeHeader())
 		return false;
 	int frame_index = 0;
-	AVBitStreamFilterContext* h264bsfc = NULL;
-	if (isMp4)
-		 h264bsfc= av_bitstream_filter_init("h264_mp4toannexb");
+	AVBitStreamFilterContext* h264bsfc = av_bitstream_filter_init("h264_mp4toannexb");
 	int startFlag = 1;
 	int64_t pts_start_time = 0;
 	int64_t dts_start_time = 0;
@@ -76,15 +77,10 @@ bool Remux::executeRemux()
 			if (readPkt.pts != AV_NOPTS_VALUE){
 				readPkt.pts = readPkt.pts - pts_start_time;
 			}
-			/*else
-			{
-				int64_t delta = av_rescale_q(1, ofmt_ctx->streams[videoIndex]->time_base, ifmt_ctx->streams[videoIndex]->time_base);
-				readPkt.pts = pre_pts + delta + 1;
-			}*/
 			if (readPkt.dts != AV_NOPTS_VALUE){
 				if (readPkt.dts <= pre_dts&&frame_index != startFlag){
 					//保证 dts 单调递增
-					int64_t delta = av_rescale_q(1, ofmt_ctx->streams[videoIndex]->time_base, ifmt_ctx->streams[videoIndex]->time_base);
+					int64_t delta = av_rescale_q(1, ofmt_ctx->streams[0]->time_base, ifmt_ctx->streams[videoIndex]->time_base);
 					readPkt.dts = pre_dts + delta + 1;
 				}
 				else{
@@ -92,15 +88,10 @@ bool Remux::executeRemux()
 					readPkt.dts = readPkt.dts - dts_start_time;
 				}
 			}
-			
-			/*if (readPkt.dts>5 * pre_dts || readPkt.pts > 5 * pre_pts)
-			{
-				std::cout << readPkt.pts << "--------------dts" << readPkt.dts << std::endl;
-			}*/
 			pre_dts = readPkt.dts;
 			pre_pts = readPkt.pts;
 			
-			av_packet_rescale_ts(&readPkt, ifmt_ctx->streams[readPkt.stream_index]->time_base, ofmt_ctx->streams[readPkt.stream_index]->time_base);
+			av_packet_rescale_ts(&readPkt, ifmt_ctx->streams[videoIndex]->time_base, ofmt_ctx->streams[0]->time_base);
 			if (readPkt.duration < 0)
 			{
 				readPkt.duration = 0;
@@ -109,6 +100,7 @@ bool Remux::executeRemux()
 			{
 				readPkt.pts = readPkt.dts + 1;
 			}
+			readPkt.stream_index = 0;
 			//这里如果使用av_interleaved_write_frame 会导致有时候写的视频文件没有数据。
 			ret =av_write_frame(ofmt_ctx, &readPkt);
 			if (ret < 0) {
@@ -120,48 +112,10 @@ bool Remux::executeRemux()
 		av_packet_unref(&readPkt);
 
 	}
+	av_bitstream_filter_close(h264bsfc);
 	av_packet_unref(&readPkt);
 	av_write_trailer(ofmt_ctx);
-	//avcodec_close(encCtx);
-	//av_free(encCtx);
-	avio_close(ofmt_ctx->pb);
-	avformat_free_context(ofmt_ctx);
-
 	return true;
-}
-void Remux::initPts(int64_t *pts, int64_t start_time){
-	AVCodecContext *enc = ofmt_ctx->streams[videoIndex]->codec;
-	AVRational tb = enc->time_base;
-	int extra_bits = av_clip(29 - av_log2(tb.den), 0, 16);
-
-	tb.den <<= extra_bits;
-	int64_t float_pts =
-		av_rescale_q(*pts, ifmt_ctx->streams[videoIndex]->time_base, tb) -
-		av_rescale_q(start_time, { 1, AV_TIME_BASE }, tb);
-	float_pts /= 1 << extra_bits;
-	// avoid exact midoints to reduce the chance of rounding differences, this can be removed in case the fps code is changed to work with integers
-	float_pts += FFSIGN(float_pts) * 1.0 / (1 << 17);
-
-	*pts =
-		av_rescale_q(*pts, ifmt_ctx->streams[videoIndex]->time_base, enc->time_base) -
-		av_rescale_q(start_time, { 1, AV_TIME_BASE }, enc->time_base);
-}
-void Remux::initDts(int64_t *dts, int64_t start_time){
-	AVCodecContext *enc = ofmt_ctx->streams[videoIndex]->codec;
-	AVRational tb = enc->time_base;
-	int extra_bits = av_clip(29 - av_log2(tb.den), 0, 16);
-
-	tb.den <<= extra_bits;
-	int64_t float_pts =
-		av_rescale_q(*dts, ifmt_ctx->streams[videoIndex]->time_base, tb) -
-		av_rescale_q(start_time, { 1, AV_TIME_BASE }, tb);
-	float_pts /= 1 << extra_bits;
-	// avoid exact midoints to reduce the chance of rounding differences, this can be removed in case the fps code is changed to work with integers
-	float_pts += FFSIGN(float_pts) * 1.0 / (1 << 17);
-
-	*dts =
-		av_rescale_q(*dts, ifmt_ctx->streams[videoIndex]->time_base, enc->time_base) -
-		av_rescale_q(start_time, { 1, AV_TIME_BASE }, enc->time_base);
 }
 bool Remux::writeHeader()
 {

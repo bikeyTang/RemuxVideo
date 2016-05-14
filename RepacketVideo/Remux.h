@@ -24,7 +24,5 @@ private:
 	string in_filename, out_filename;
 	AVCodecContext *encCtx=NULL;
 	bool writeHeader();
-	void initPts(int64_t*, int64_t);
-	void initDts(int64_t*, int64_t);
 };
 
