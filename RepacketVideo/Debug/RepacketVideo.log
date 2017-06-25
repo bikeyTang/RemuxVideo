@@ -1,18 +1,16 @@
-﻿生成启动时间为 2016/5/14 14:23:40。
-     1>项目“D:\visual studio 2013\Projects\RepacketVideo\RepacketVideo\RepacketVideo.vcxproj”在节点 2 上(Rebuild 个目标)。
+﻿生成启动时间为 2016/12/9 11:04:24。
+     1>项目“D:\visual studio 2013\Projects\RepacketVideo\RepacketVideo\RepacketVideo.vcxproj”在节点 2 上(Build 个目标)。
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ID:\ffmpeg_libs\include /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp Remux.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ID:\ffmpeg_libs\include /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt Remux.cpp
          Remux.cpp
      1>d:\visual studio 2013\projects\repacketvideo\repacketvideo\remux.cpp(128): warning C4018: “<”: 有符号/无符号不匹配
      1>d:\visual studio 2013\projects\repacketvideo\repacketvideo\remux.cpp(125): warning C4101: “encoder”: 未引用的局部变量
-         main.cpp
-         正在生成代码...
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\visual studio 2013\Projects\RepacketVideo\Debug\RepacketVideo.exe" /INCREMENTAL /NOLOGO /LIBPATH:D:\ffmpeg_libs\lib avcodec.lib avformat.lib avutil.lib avdevice.lib avfilter.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\visual studio 2013\Projects\RepacketVideo\Debug\RepacketVideo.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\visual studio 2013\Projects\RepacketVideo\Debug\RepacketVideo.lib" /MACHINE:X86 Debug\main.obj
          Debug\Remux.obj
          RepacketVideo.vcxproj -> D:\visual studio 2013\Projects\RepacketVideo\Debug\RepacketVideo.exe
-     1>已完成生成项目“D:\visual studio 2013\Projects\RepacketVideo\RepacketVideo\RepacketVideo.vcxproj”(Rebuild 个目标)的操作。
+     1>已完成生成项目“D:\visual studio 2013\Projects\RepacketVideo\RepacketVideo\RepacketVideo.vcxproj”(Build 个目标)的操作。
 
 生成成功。
 
-已用时间 00:00:01.27
+已用时间 00:00:01.22
